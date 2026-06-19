@@ -1,4 +1,7 @@
 
+using Dsw2026Ej15.Data;
+using Dsw2026Ej15.Domain.Interfaces;
+
 namespace Dsw2026Ej15.Api
 {
     public class Program
@@ -7,6 +10,9 @@ namespace Dsw2026Ej15.Api
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            builder.Services.AddSingleton<IPersistence, PersistenceInMemory>();
+            builder.Services.AddHealthChecks();
+
             // Add services to the container.
 
             builder.Services.AddControllers();
@@ -14,6 +20,7 @@ namespace Dsw2026Ej15.Api
             builder.Services.AddOpenApi();
 
             var app = builder.Build();
+            app.UseMiddleware<ExceptionMiddleware>();
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
@@ -25,6 +32,7 @@ namespace Dsw2026Ej15.Api
 
 
             app.MapControllers();
+            app.MapHealthChecks("/health-check");
 
             app.Run();
         }

@@ -20,4 +20,8 @@ public class Doctor : BaseEntity
         Speciality = speciality;
         IsActive = true;
     }
+    public void Deactivate()
+    {
+        IsActive = false;
+    }
 }
