@@ -1,100 +1,72 @@
-﻿using Dsw2026Ej15.Api.DTOs;
+﻿using Dsw2026Ej15.Api.Models;
 using Dsw2026Ej15.Domain.Entities;
+using Dsw2026Ej15.Domain.Exceptions;
 using Dsw2026Ej15.Domain.Interfaces;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel.DataAnnotations;
 
-namespace Dsw2026Ej15.Api.Controllers
+namespace Dsw2026Ej15.Api.Controllers;
+
+public class DoctorsController : AppController
 {
-    [ApiController]
-    [Route("api/doctors")]
-    public class DoctorsController : ControllerBase
+    private readonly IPersistence _persistence;
+
+    public DoctorsController(IPersistence persistence)
     {
-        private readonly IPersistence _persistence;
+        _persistence = persistence;
+    }
 
-        public DoctorsController(IPersistence persistence)
+    [HttpPost("doctors")]
+    public async Task<IActionResult> CreateDoctor(DoctorModel.Request request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Name) || string.IsNullOrWhiteSpace(request.LicenseNumber))
         {
-            _persistence = persistence;
-        }
-        [HttpPost]
-        public IActionResult CreateDoctor([FromBody] DoctorInsertDto dto)
-        {
-            var speciality = _persistence.GetSpecialityById(dto.SpecialityId);
-
-            if (speciality == null)
-            {
-                throw new ValidationException("La especialidad especificada no existe.");
-            }
-
-            var newDoctor = new Doctor(dto.Name, dto.LicenseNumber, speciality);
-            _persistence.AddDoctor(newDoctor);
-
-            var response = new DoctorResponseDto
-            {
-                Id = newDoctor.Id,
-                Name = newDoctor.Name,
-                LicenseNumber = newDoctor.LicenseNumber,
-                SpecialityName = speciality.Name
-            };
-
-            return CreatedAtAction(nameof(GetDoctorById), new { id = response.Id }, response);
+            throw new ValidationException("Nombre y Matrícula son requeridos.");
         }
 
-        [HttpGet]
-        public IActionResult GetDoctors()
+        var speciality = _persistence.GetSpecialityById(request.SpecialityId);
+        if (speciality is null)
         {
-            var doctors = _persistence.GetDoctors()
-                .Where(d => d.IsActive) // Solo activos
-                .Select(d => new DoctorResponseDto
-                {
-                    Id = d.Id,
-                    Name = d.Name,
-                    LicenseNumber = d.LicenseNumber,
-                    SpecialityName = d.Speciality?.Name ?? "Sin Especialidad"
-                });
-
-            return Ok(doctors);
+            throw new ValidationException("La especialidad no existe.");
         }
 
-        [HttpGet("{id:guid}")]
-        public IActionResult GetDoctorById(Guid id)
+        var doctor = new Doctor(request.Name, request.LicenseNumber, speciality);
+        _persistence.AddDoctor(doctor);
+
+        return Created();
+    }
+
+    [HttpGet("doctors")]
+    public async Task<IActionResult> GetDoctors()
+    {
+        return Ok(_persistence.GetDoctors());
+    }
+
+    [HttpGet("doctors/{id:guid}")]
+    public async Task<IActionResult> GetDoctorById(Guid id)
+    {
+        var doctor = _persistence.GetDoctorById(id);
+        if (doctor is null || !doctor.IsActive)
         {
-            var doctor = _persistence.GetDoctorById(id);
-
-           
-            if (doctor == null || !doctor.IsActive)
-            {
-                return NotFound($"No se encuentra el médico o no está activo.");
-            }
-
-            var response = new DoctorResponseDto
-            {
-                Id = doctor.Id,
-                Name = doctor.Name,
-                LicenseNumber = doctor.LicenseNumber,
-                SpecialityName = doctor.Speciality?.Name ?? "Sin Especialidad"
-            };
-
-            return Ok(response);
+            throw new ValidationException("No se encuentra el doctor.");
         }
 
-        [HttpDelete("{id:guid}")]
-        public IActionResult DeleteDoctor(Guid id)
+        var response = new DoctorModel.Response(doctor.Name, doctor.LicenseNumber, doctor.Speciality?.Name);
+
+        return Ok(response);
+    }
+
+    [HttpDelete("doctors/{id:guid}")]
+    public async Task<IActionResult> DeleteDoctor(Guid id)
+    {
+        var doctor = _persistence.GetDoctorById(id);
+        if (doctor is null || !doctor.IsActive)
         {
-            var doctor = _persistence.GetDoctorById(id);
-
-            if (doctor == null || !doctor.IsActive)
-            {
-                return NotFound($"No se encuentra el médico o ya está de baja.");
-            }
-
-            
-            doctor.Deactivate();
-
-            
-            return NoContent();
+            throw new ValidationException("No se encuentra el doctor.");
         }
 
+        _persistence.DeleteDoctor(id);
+
+        return NoContent();
     }
 }
+
