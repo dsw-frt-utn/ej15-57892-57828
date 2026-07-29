@@ -9,8 +9,9 @@ namespace Dsw2026Ej15.Data
 {
     public class PersistenceInMemory : IPersistence
     {
-        private readonly List<Doctor> _doctors = new();
-        private readonly List<Speciality> _specialities = new();
+        private List<Speciality> _specialities = [];
+        private List<Doctor> _doctors = [];
+
         public PersistenceInMemory()
         {
             LoadSpecialities();
@@ -20,25 +21,23 @@ namespace Dsw2026Ej15.Data
         {
             try
             {
-                // Busca el archivo en la carpeta de ejecución de la API
-                var filePath = Path.Combine(AppContext.BaseDirectory, "specialities.json");
-
-                if (File.Exists(filePath))
-                {
-                    var json = File.ReadAllText(filePath);
-                    var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-                    var list = JsonSerializer.Deserialize<List<Speciality>>(json, options);
-
-                    if (list != null)
+                string jsonPath = Path.Combine(
+                AppDomain.CurrentDomain.BaseDirectory,
+                "Sources",
+                "specialities.json"
+            );
+                var json = File.ReadAllText(jsonPath);
+                var specialities = JsonSerializer.Deserialize<List<SpecialityDto>>(json,
+                    new JsonSerializerOptions()
                     {
-                        _specialities.AddRange(list);
-                    }
-                }
+                        PropertyNameCaseInsensitive = true
+                    }) ?? [];
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error al cargar el JSON: {ex.Message}");
+                Console.WriteLine($"Error loading specialities: {ex.Message}");
             }
+
         }
         public void AddDoctor(Doctor doctor)
         {
