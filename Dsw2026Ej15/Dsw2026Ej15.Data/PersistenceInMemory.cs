@@ -1,7 +1,9 @@
-﻿using Dsw2026Ej15.Domain.Entities;
+﻿using Dsw2026Ej15.Data.Dto;
+using Dsw2026Ej15.Domain.Entities;
 using Dsw2026Ej15.Domain.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using System.Text;
 using System.Text.Json;
 
@@ -21,42 +23,49 @@ namespace Dsw2026Ej15.Data
         {
             try
             {
+                //Path.Combine construye la ruta bien segun cada SO
                 string jsonPath = Path.Combine(
                 AppDomain.CurrentDomain.BaseDirectory,
                 "Sources",
                 "specialities.json"
-            );
+                );
                 var json = File.ReadAllText(jsonPath);
                 var specialities = JsonSerializer.Deserialize<List<SpecialityDto>>(json,
-                    new JsonSerializerOptions()
+                    new JsonSerializerOptions() //esto es para no ser estrictos en may y min
                     {
                         PropertyNameCaseInsensitive = true
                     }) ?? [];
+                _specialities = [.. specialities.Select(s => new Speciality(s.Name, s.Description, s.Id))];
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error loading specialities: {ex.Message}");
             }
-
         }
+
+        public Speciality? GetSpecialityById(Guid id)
+        {
+            return _specialities.SingleOrDefault(s => s.Id == id);
+        }
+
         public void AddDoctor(Doctor doctor)
         {
             _doctors.Add(doctor);
         }
 
-        public Doctor? GetDoctorById(Guid id)
+        public Doctor GetDoctorById(Guid id)
         {
-            return _doctors.FirstOrDefault(d => d.Id == id);
+            return _doctors.SingleOrDefault(d => d.Id == id);
         }
 
         public IEnumerable<Doctor> GetDoctors()
         {
-            return _doctors;
+            return _doctors.Where(d => d.IsActive == true);
         }
 
-        public Speciality? GetSpecialityById(Guid id)
+        public void DeleteDoctor(Guid id)
         {
-            return _specialities.FirstOrDefault(s => s.Id == id);
+            var doctor = GetDoctorById(id);
+            doctor.IsActive = false;
         }
     }
 }

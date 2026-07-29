@@ -7,10 +7,10 @@ namespace Dsw2026Ej15.Domain.Interfaces
 {
     public interface IPersistence
     {
-        IEnumerable<Doctor> GetDoctors();
         Doctor? GetDoctorById(Guid id);
         void AddDoctor(Doctor doctor);
         Speciality? GetSpecialityById(Guid id);
-
+        void DeleteDoctor(Guid id);
+        IEnumerable<Doctor> GetDoctors();
     }
 }
