@@ -8,8 +8,11 @@ public class Doctor : BaseEntity
 {
     public string Name { get; init; }
     public string LicenseNumber { get; init; }
-    public bool IsActive { get; set; }
-    public Speciality? Speciality { get; private set; }
+    public bool IsActive { get; private set; }
+    public Guid? SpecialityId { get; set; }
+    public Speciality? Speciality { get; private set; } //es como propiedad de navegación
+
+    private Doctor() { } //Solo para trabajar con el ORM
 
     public Doctor(string name, string licenseNumber, Speciality speciality, Guid? id = null)
         : base(id)
@@ -18,5 +21,10 @@ public class Doctor : BaseEntity
         LicenseNumber = licenseNumber;
         Speciality = speciality;
         IsActive = true;
+    }
+
+    public void Deactivate()
+    {
+        IsActive = false;
     }
 }

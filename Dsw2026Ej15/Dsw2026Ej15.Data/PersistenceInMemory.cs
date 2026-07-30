@@ -42,30 +42,31 @@ namespace Dsw2026Ej15.Data
             }
         }
 
-        public Speciality? GetSpecialityById(Guid id)
+        public async Task<Speciality?> GetSpecialityById(Guid id)
         {
             return _specialities.SingleOrDefault(s => s.Id == id);
         }
 
-        public void AddDoctor(Doctor doctor)
+        public async Task AddDoctor(Doctor doctor)
         {
             _doctors.Add(doctor);
         }
 
-        public Doctor GetDoctorById(Guid id)
+        public async Task<Doctor?> GetDoctorById(Guid id)
         {
-            return _doctors.SingleOrDefault(d => d.Id == id);
+            return _doctors.SingleOrDefault(d => d.Id == id && d.IsActive);
         }
 
-        public IEnumerable<Doctor> GetDoctors()
+        public async Task<IEnumerable<Doctor>> GetAllDoctors()
         {
-            return _doctors.Where(d => d.IsActive == true);
+            return _doctors.Where(d => d.IsActive);
         }
 
-        public void DeleteDoctor(Guid id)
+
+        public async Task UpdateDoctor(Doctor doctor)
         {
-            var doctor = GetDoctorById(id);
-            doctor.IsActive = false;
+            _doctors.Remove(doctor);
+            _doctors.Add(doctor);
         }
     }
 }
