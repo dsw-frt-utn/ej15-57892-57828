@@ -23,7 +23,6 @@ namespace Dsw2026Ej15.Data
         {
             try
             {
-                //Path.Combine construye la ruta bien segun cada SO
                 string jsonPath = Path.Combine(
                 AppDomain.CurrentDomain.BaseDirectory,
                 "Sources",
@@ -31,8 +30,7 @@ namespace Dsw2026Ej15.Data
                 );
                 var json = File.ReadAllText(jsonPath);
                 var specialities = JsonSerializer.Deserialize<List<SpecialityDto>>(json,
-                    new JsonSerializerOptions() //esto es para no ser estrictos en may y min
-                    {
+                    new JsonSerializerOptions() 
                         PropertyNameCaseInsensitive = true
                     }) ?? [];
                 _specialities = [.. specialities.Select(s => new Speciality(s.Name, s.Description, s.Id))];
